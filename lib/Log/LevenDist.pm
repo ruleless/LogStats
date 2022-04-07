@@ -3,15 +3,17 @@ package Log::LevenDist;
 use strict;
 use warnings;
 
-use Exporter qw(import);
-
 use List::Util qw(min max);
 
-our @EXPORT = qw(leven_dist similarity_of_str);
+# 函数导出定义
+use Exporter qw(import);
+
+our @EXPORT = qw(leven_dist);
+our @EXPORT_OK = qw(similarity_of_str);
 
 =head1 NAME
 
-Log::LevenDist - The great new Log::LevenDist!
+Log::LevenDist - calculate Levenshtein distance between two string
 
 =head1 VERSION
 
@@ -28,10 +30,10 @@ Quick summary of what the module does.
 
 Perhaps a little code snippet.
 
-    use Log::LevenDist;
+    use Log::LevenDist qw(leven_dist similarity_of_str);
 
-    my $foo = Log::LevenDist->new();
-    ...
+    my $dist = leven_dist 'Hello', 'Hello World';
+    my $similarity = similarity_of_str('Hello', 'Hello World');
 
 =cut
 
@@ -71,7 +73,7 @@ sub calc_leven_dist_by_dp {
 
 sub leven_dist {
     my ($s1, $s2) = @_;
-    die unless defined($s1) and defined($s2);
+    die 'invalid parameters' unless defined($s1) and defined($s2);
 
     my @dp;
     return calc_leven_dist_by_dp \$s1, \$s2, length $s1, length $s2, \@dp;
@@ -85,7 +87,7 @@ sub leven_dist {
 
 sub similarity_of_str {
     my ($s1, $s2) = @_;
-    die unless defined($s1) and defined($s2);
+    die 'invalid parameters' unless defined($s1) and defined($s2);
 
     my $max_len = max(length $s1, length $s2);
     if ($max_len == 0) {
