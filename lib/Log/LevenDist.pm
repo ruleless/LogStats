@@ -1,8 +1,13 @@
 package Log::LevenDist;
 
-use 5.006;
 use strict;
 use warnings;
+
+use Exporter qw(import);
+
+use List::Util qw(min max);
+
+our @EXPORT = qw(leven_dist similarity_of_str);
 
 =head1 NAME
 
@@ -28,78 +33,67 @@ Perhaps a little code snippet.
     my $foo = Log::LevenDist->new();
     ...
 
-=head1 EXPORT
+=cut
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
+=head1 METHODS
 
 =cut
 
-sub function1 {
+sub calc_leven_dist_by_dp {
+    my ($s1_ref, $s2_ref, $i, $j, $dp_ref) = @_;
+
+    if ($i == 0) {
+        return $j;
+    }
+    if ($j == 0) {
+        return $i;
+    }
+
+    if (defined($dp_ref->[$i][$j])) {
+        return $dp_ref->[$i][$j];
+    }
+
+    my $d1 = calc_leven_dist_by_dp($s1_ref, $s2_ref, $i - 1, $j, $dp_ref);
+    my $d2 = calc_leven_dist_by_dp($s1_ref, $s2_ref, $i, $j - 1, $dp_ref);
+    my $d3 = calc_leven_dist_by_dp($s1_ref, $s2_ref, $i - 1, $j - 1, $dp_ref);
+    my $chr_i = substr $$s1_ref, $i - 1, 1;
+    my $chr_j = substr $$s2_ref, $j - 1, 1;
+
+    $dp_ref->[$i][$j] = min($d1 + 1, $d2 + 1, $d3 + !($chr_i eq $chr_j));
+    return $dp_ref->[$i][$j];
 }
 
-=head2 function2
+=head2 leven_dist
+
+求两个字符串之间的 Levenshtein 距离，亦即编辑距离
 
 =cut
 
-sub function2 {
+sub leven_dist {
+    my ($s1, $s2) = @_;
+    die unless defined($s1) and defined($s2);
+
+    my @dp;
+    return calc_leven_dist_by_dp \$s1, \$s2, length $s1, length $s2, \@dp;
 }
 
-=head1 AUTHOR
+=head2 similarity_of_str
 
-ruleless, C<< <ruleless at 126.com> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-log-stats at rt.cpan.org>, or through
-the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Log-Stats>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Log::LevenDist
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=Log-Stats>
-
-=item * CPAN Ratings
-
-L<https://cpanratings.perl.org/d/Log-Stats>
-
-=item * Search CPAN
-
-L<https://metacpan.org/release/Log-Stats>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
-
-=head1 LICENSE AND COPYRIGHT
-
-This software is Copyright (c) 2022 by ruleless.
-
-This is free software, licensed under:
-
-  The Artistic License 2.0 (GPL Compatible)
-
+求两个字符串之间的相似性
 
 =cut
+
+sub similarity_of_str {
+    my ($s1, $s2) = @_;
+    die unless defined($s1) and defined($s2);
+
+    my $max_len = max(length $s1, length $s2);
+    if ($max_len == 0) {
+        return 0;
+    }
+
+    my $dist = leven_dist($s1, $s2);
+    return 1 - $dist / $max_len;
+}
 
 1; # End of Log::LevenDist
