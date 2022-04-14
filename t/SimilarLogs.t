@@ -20,6 +20,9 @@ my $similar_logs = Log::SimilarLogs->new;
 
 ok($similar_logs->empty);
 
+is($similar_logs->get_max_log_count, 100);
+is($similar_logs->get_threshhold_similarity, 0.7);
+
 ok(test_and_add(
     $similar_logs,
     'start worker processes',
@@ -34,6 +37,11 @@ ok(test_and_add(
     $similar_logs,
     'start worker process 24498',
     '2020/03/26 13:00:11 [notice] 24496#0: start worker process 24498'));
+
+ok(test_and_add(
+    $similar_logs,
+    '[lua] client.lua:484: init(): [dns-client] Hosts file not found: /etc/nginx/hosts',
+    '2020/03/26 12:59:13 [warn] 24452#0: [lua] client.lua:484: init(): [dns-client] Hosts file not found: /etc/nginx/hosts'));
 
 is($similar_logs->get_log_count, 3);
 
